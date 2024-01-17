@@ -1,139 +1,145 @@
 
-const list = document.getElementById("list");
-const createBtn = document.getElementById("create-btn");
+document.addEventListener('DOMContentLoaded', function () {
+    const createBtn = document.getElementById('create-btn');
+    const todoList = document.getElementById('list');
 
-let todos = [];
+    createBtn.addEventListener('click', function () {
+        const newTodo = prompt('새로운 할 일을 입력하세요.');
+        if (newTodo) {
+            addTodo(newTodo);
+        }
+    });
+	function loadFromLocalStorage() {
+        const data = localStorage.getItem("my_todos");
 
-createBtn.addEventListener('click', createNewTodo);
- // addEventListener  => 어떠한 이벤트가 발생했을 때 함수를 등록.
-function createNewTodo() {
-	// 새로운 아이템 객체 생성
-	const item = {
-		id: new Date().getTime(), //1690604133472
-		text: "",
-		complete: false
-	}
+        if (data) {
+            todos = JSON.parse(data);
+        } else {
+            // localStorage에 데이터가 없을 경우 초기화
+            saveToLocalStorage();
+        }
+    }
 
-	// 배열에 처음에 새로운 아이템을 추가
-	todos.unshift(item);
+    function addTodo(task) {
+        const item = {
+            id: new Date().getTime(),
+            text: task,
+            complete: false
+        };
 
-	// 요소 생성하기
-	const { itemEl, inputEl,editBtnEl,removeBtnEl} = createTodoElement(item);
-    
+        todos.unshift(item);
 
-	// 리스트 요소 안에 방금 생성한 아이템 요소 추가(가장 첫번째 요소로 추가)
-	list.prepend(itemEl);
+        const { itemEl, inputEl, editBtnEl, removeBtnEl, checkbox } = createTodoElement(item);
 
-	// disabled 속성 제거
-	inputEl.removeAttribute("disabled");
-	// input 요소에 focus 
-	inputEl.focus();
+        list.prepend(itemEl);
 
-	saveToLocalStorage();
-}
+        inputEl.removeAttribute('disabled');
+        inputEl.focus();
 
-function createTodoElement(item) {
-	const itemEl = document.createElement("div");
-	itemEl.classList.add("item");
+        saveToLocalStorage();
 
-	const checkbox = document.createElement("input");
-	checkbox.type = "checkbox";
-	checkbox.checked = item.complete;
+        checkbox.addEventListener('change', function () {
+            item.complete = checkbox.checked;
 
-	if (item.complete) {
-		itemEl.classList.add("complete");
-	}
+            if (item.complete) {
+                inputEl.classList.add('complete');
+            } else {
+                inputEl.classList.remove('complete');
+            }
 
-	const inputEl = document.createElement("input");
-	inputEl.type = "text";
-	inputEl.value = item.text;
-	inputEl.setAttribute("disabled", "");
+            saveToLocalStorage();
+        });
 
-	const actionsEl = document.createElement("div");
-	actionsEl.classList.add("actions");
+        inputEl.addEventListener('input', function () {
+            item.text = inputEl.value;
+        });
 
-	const editBtnEl = document.createElement("button");
-	editBtnEl.classList.add("material-icons");
-	editBtnEl.innerText = "edit";
+        inputEl.addEventListener('blur', function () {
+            inputEl.setAttribute('disabled', '');
+            saveToLocalStorage();
+        });
 
-	const removeBtnEl = document.createElement("button");
-	removeBtnEl.classList.add("material-icons", "remove-btn");
-	removeBtnEl.innerText = "remove_circle";
-
-	actionsEl.append(editBtnEl); 
-	actionsEl.append(removeBtnEl);
-
-	itemEl.append(checkbox);
-	itemEl.append(inputEl);
-	itemEl.append(actionsEl);
-
-    return { itemEl, inputEl, editBtnEl, removeBtnEl }
-}
-
-    
-
-	// EVENTS
-	checkbox.addEventListener("change", () => {
-		item.complete = checkbox.checked;
-
-		if (item.complete) {
-			itemEl.classList.add("complete");
-		} else {
-			itemEl.classList.remove("complete");
-		}
-
-		saveToLocalStorage();
-	});
-
-	inputEl.addEventListener("input", () => {
-		item.text = inputEl.value;
-	});
-
-	inputEl.addEventListener("blur", () => {
-		inputEl.setAttribute("disabled", "");
-
-		saveToLocalStorage();
-	});
-
-	editBtnEl.addEventListener("click", () => {
-		inputEl.removeAttribute("disabled");
-		inputEl.focus();
-	});
-
-	removeBtnEl.addEventListener("click", () => {
-		todos = todos.filter(t => t.id != item.id);
-		itemEl.remove();
-
-		saveToLocalStorage();
-	});
+        editBtnEl.addEventListener('click', function () {
+            inputEl.removeAttribute('disabled');
+            inputEl.focus();
+        });
 
 
+    }
 
+    function createTodoElement(item) {
+        const itemEl = document.createElement('div');
+        itemEl.classList.add('item');
+		itemEl.dataset.itemId = item.id;
 
-function saveToLocalStorage() {
-	const data = JSON.stringify(todos);
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = item.complete;
 
-	localStorage.setItem("my_todos", data);
-}
+        if (item.complete) {
+            itemEl.classList.add('complete');
+        }
 
-function loadFromLocalStorage() {
-	const data = localStorage.getItem("my_todos");
+        const inputEl = document.createElement('input');
+        inputEl.type = 'text';
+        inputEl.value = item.text;
+        inputEl.setAttribute('disabled', '');
 
-	if (data) {
-		todos = JSON.parse(data);
-	}
-}
+        const actionsEl = document.createElement('div');
+        actionsEl.classList.add('actions');
 
-function displayTodos() {
-	loadFromLocalStorage();
+        const editBtnEl = document.createElement('button');
+        editBtnEl.classList.add('material-icons');
+        editBtnEl.innerText = 'edit';
 
-	for (let i = 0; i < todos.length; i++) {
-		const item = todos[i];
+        const removeBtnEl = document.createElement('button');
+        removeBtnEl.classList.add('material-icons', 'remove-btn');
+        removeBtnEl.innerText = 'remove_circle';
 
-		const { itemEl } = createTodoElement(item);
+        actionsEl.append(editBtnEl);
+        actionsEl.append(removeBtnEl);
 
-		list.append(itemEl);
-	}
-}
+        itemEl.append(checkbox);
+        itemEl.append(inputEl);
+        itemEl.append(actionsEl);
 
-displayTodos();
+		removeBtnEl.addEventListener("click", function () {
+			todos = todos.filter(t => t.id.toString() !== item.id);
+			itemEl.remove();
+			saveToLocalStorage();
+
+			// localStorage에서도 해당 아이템을 삭제
+			const data = JSON.stringify(todos);
+			localStorage.setItem("my_todos", data);
+		});
+
+        return { itemEl, inputEl, editBtnEl, removeBtnEl, checkbox };
+    }
+
+    function saveToLocalStorage() {
+        const data = JSON.stringify(todos);
+        localStorage.setItem('my_todos', data);
+    }
+
+    function loadFromLocalStorage() {
+        const data = localStorage.getItem('my_todos');
+
+        if (data) {
+            todos = JSON.parse(data);
+        }
+    }
+
+    function displayTodos() {
+        loadFromLocalStorage();
+
+        for (let i = 0; i < todos.length; i++) {
+            const item = todos[i];
+
+            const { itemEl } = createTodoElement(item);
+
+            list.append(itemEl);
+        }
+    }
+
+    displayTodos();
+});
